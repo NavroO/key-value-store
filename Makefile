@@ -7,3 +7,6 @@ run:
 
 test:
 	go test ./pkg/... -v
+
+benchmark:
+	go test -bench=. -benchtime=10s ./pkg/api/
