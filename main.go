@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/NavroO/go-key-value-store/cmd/server"
 
 func main() {
-	fmt.Println("Hello, World!")
+	server.StartServer()
 }
