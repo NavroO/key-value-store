@@ -36,13 +36,14 @@ func (s *Server) setKey(c *gin.Context) {
 	var req struct {
 		Key   string `json:"key"`
 		Value string `json:"value"`
+		Ttl   int    `json:"ttl"`
 	}
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	s.store.Set(req.Key, req.Value)
+	s.store.Set(req.Key, req.Value, req.Ttl)
 	c.JSON(http.StatusOK, gin.H{"message": "Value set successfully"})
 }
 
