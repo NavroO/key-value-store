@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"os"
 
@@ -14,10 +15,12 @@ type Server struct {
 	store  *storage.InMemoryStorage
 	router *gin.Engine
 	logger *zap.Logger
+	server *http.Server
 }
 
 func NewServer(store *storage.InMemoryStorage) *Server {
 	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	router := gin.Default()
 
 	if err != nil {
 		panic(err)
@@ -38,6 +41,7 @@ func NewServer(store *storage.InMemoryStorage) *Server {
 		store:  store,
 		router: gin.Default(),
 		logger: logger,
+		server: &http.Server{Addr: ":8080", Handler: router},
 	}
 
 	server.router.Use(server.logMiddleware)
@@ -52,7 +56,12 @@ func (s *Server) setupRoutes() {
 }
 
 func (s *Server) Run(port string) {
-	s.router.Run(":" + port)
+	s.server.Addr = port
+	s.server.ListenAndServe()
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.server.Shutdown(ctx)
 }
 
 func (s *Server) setKey(c *gin.Context) {

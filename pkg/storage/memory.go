@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -11,6 +12,7 @@ type InMemoryStorage struct {
 	data       KeyValueStore
 	expiration map[string]time.Time
 	mu         sync.RWMutex
+	cancel     context.CancelFunc
 }
 
 func NewInMemoryStorage() *InMemoryStorage {
@@ -19,20 +21,23 @@ func NewInMemoryStorage() *InMemoryStorage {
 		expiration: make(map[string]time.Time),
 	}
 
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 
-			s.mu.Lock()
-			for key, expiry := range s.expiration {
-				if time.Now().After(expiry) {
-					delete(s.data, key)
-					delete(s.expiration, key)
-				}
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				s.cleanupExpiredKeys()
 			}
-			s.mu.Unlock()
 		}
 	}()
+
+	s.cancel = cancel
 
 	return s
 }
@@ -69,4 +74,22 @@ func (s *InMemoryStorage) Delete(key string) bool {
 		delete(s.expiration, key)
 	}
 	return ok
+}
+
+func (s *InMemoryStorage) cleanupExpiredKeys() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for key, expiry := range s.expiration {
+		if time.Now().After(expiry) {
+			delete(s.data, key)
+			delete(s.expiration, key)
+		}
+	}
+}
+
+func (s *InMemoryStorage) Shutdown() {
+	if s.cancel != nil {
+		s.cancel()
+	}
 }

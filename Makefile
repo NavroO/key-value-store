@@ -3,7 +3,7 @@ BINARY=key-value-store
 MAIN=cmd/server/main.go
 
 run:
-	go run $(MAIN)
+	go run $(MAIN) || true
 
 test:
 	go test ./pkg/... -v
