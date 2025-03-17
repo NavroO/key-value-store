@@ -2,22 +2,45 @@ package api
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/NavroO/go-key-value-store/pkg/storage"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Server struct {
 	store  *storage.InMemoryStorage
 	router *gin.Engine
+	logger *zap.Logger
 }
 
 func NewServer(store *storage.InMemoryStorage) *Server {
+	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	if err != nil {
+		panic(err)
+	}
+
+	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	fileWriter := zapcore.AddSync(file)
+	consoleWriter := zapcore.AddSync(os.Stdout)
+
+	core := zapcore.NewTee(
+		zapcore.NewCore(encoder, fileWriter, zap.InfoLevel),
+		zapcore.NewCore(encoder, consoleWriter, zap.InfoLevel),
+	)
+
+	logger := zap.New(core)
+
 	server := &Server{
 		store:  store,
 		router: gin.Default(),
+		logger: logger,
 	}
 
+	server.router.Use(server.logMiddleware)
 	server.setupRoutes()
 	return server
 }
