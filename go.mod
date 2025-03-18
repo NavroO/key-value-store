@@ -7,7 +7,10 @@ require (
 	github.com/stretchr/testify v1.10.0
 )
 
-require go.uber.org/multierr v1.10.0 // indirect
+require (
+	github.com/joho/godotenv v1.5.1 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect

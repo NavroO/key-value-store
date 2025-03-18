@@ -19,12 +19,22 @@ type Server struct {
 }
 
 func NewServer(store *storage.InMemoryStorage) *Server {
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	router := gin.Default()
+	logFilePath := os.Getenv("LOG_FILE_PATH")
+	if logFilePath == "" {
+		logFilePath = "logs.txt"
+	}
 
+	addr := os.Getenv("APP_PORT")
+	if addr == "" {
+		addr = ":8080"
+	}
+
+	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
+
+	router := gin.Default()
 
 	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 	fileWriter := zapcore.AddSync(file)
@@ -41,7 +51,7 @@ func NewServer(store *storage.InMemoryStorage) *Server {
 		store:  store,
 		router: gin.Default(),
 		logger: logger,
-		server: &http.Server{Addr: ":8080", Handler: router},
+		server: &http.Server{Addr: addr, Handler: router},
 	}
 
 	server.router.Use(server.logMiddleware)

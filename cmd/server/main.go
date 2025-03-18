@@ -10,9 +10,19 @@ import (
 
 	"github.com/NavroO/go-key-value-store/pkg/api"
 	"github.com/NavroO/go-key-value-store/pkg/storage"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file found, using default configuration")
+	}
+
+	appPort := os.Getenv("APP_PORT")
+	if appPort == "" {
+		appPort = "8080"
+	}
+
 	store := storage.NewInMemoryStorage()
 	server := api.NewServer(store)
 
