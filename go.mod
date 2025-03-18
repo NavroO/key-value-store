@@ -1,16 +1,14 @@
 module github.com/NavroO/go-key-value-store
 
-go 1.22.1
+go 1.22
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.10.0
 )
 
-require (
-	github.com/joho/godotenv v1.5.1 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
-)
+require go.uber.org/multierr v1.10.0 // indirect
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
